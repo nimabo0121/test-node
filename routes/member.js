@@ -58,24 +58,9 @@ const getListData = async (req) => {
       };
     }
 // 構造 SQL 查詢語句，根據條件過濾和排序
-const sql2 = `
-SELECT 
-  mp.*, 
-  ml.role, 
-  ml.status 
-FROM 
-  member_profile mp
-INNER JOIN 
-  member_login ml
-ON 
-  mp.id = ml.member_profile_id AND ml.status = 'active'
-${where} 
-ORDER BY 
-  mp.id 
-  DESC LIMIT ${
+const sql2 = `SELECT * FROM member_profile ${where} ORDER BY id DESC LIMIT ${
   (page - 1) * perPage
-}, ${perPage} 
-`;
+}, ${perPage} `;
 
 
     // 執行 SQL 查詢，獲取分頁結果
@@ -105,12 +90,16 @@ ORDER BY
 
 // router top-level middleware
 
+const ADMIN_ROLE = 'admin';
+
 router.use((req, res, next) => {
-  if (req.session.admin) {
+  if (req.session && req.session.admin && req.session.admin.role === ADMIN_ROLE) {
     // 如果有登入就讓他通過
+    // 條件: 已登入並且為admin
     return next();
   }
   let path = req.url.split("?")[0]; // 只要路徑 (去掉 query string)
+
   // 可通過的白名單
   if (["/", "/api"].includes(path)) {
     return next();
@@ -130,10 +119,11 @@ router.get("/", async (req, res) => {
   if (result.redirect) {
     return res.redirect(result.redirect);
   }
-  if (req.session.admin) {
+  
+  if (req.session && req.session.admin && req.session.admin.role === ADMIN_ROLE) {
     res.render("member/list", result);
   } else {
-    res.render("member/list", result);
+    res.render("ago-index/ago-home", result);
   }
 });
 

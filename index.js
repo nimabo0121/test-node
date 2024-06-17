@@ -10,7 +10,9 @@ import bcrypt from "bcrypt";
 // const upload = multer({ dest: "tmp_uploads/" });
 import upload from "./utils/upload-imgs.js";
 import admin2Router from "./routes/admin2.js";
+import noRouter from "./routes/no-index.js";
 import abRouter from "./routes/member.js";
+import agoRouter from "./routes/ago-index.js";
 // import cart2Router from "./routes/cart2.js";
 import session from "express-session";
 import mysql_session from "express-mysql-session";
@@ -57,14 +59,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// 路由設定, routes
-// 1. get(): 只接受 HTTP GET 方法的拜訪
-// 2. 只接受 路徑為 / 的 request
-app.get("/", (req, res) => {
-  // res.send("<h2>Hello World</h2>");
-  res.render("member", { name: "member" });
-});
-
 app.get("/json-sales", (req, res) => {
   res.locals.title = "JSON-SALES | " + res.locals.title;
   res.locals.pageName = "json-sales";
@@ -74,6 +68,28 @@ app.get("/json-sales", (req, res) => {
 
   res.render("json-sales", { sales });
 });
+
+
+app.get("/", (req, res) => {
+  // res.send("<h2>Hello World</h2>");
+  res.render("no-home", { name: "noRouter" });
+});
+
+
+app.get("/", (req, res) => {
+  // res.send("<h2>Hello World</h2>");
+  res.render("ago-home", { name: "ago-index" });
+});
+
+// 路由設定, routes
+// 1. get(): 只接受 HTTP GET 方法的拜訪
+// 2. 只接受 路徑為 / 的 request
+app.get("/", (req, res) => {
+  // res.send("<h2>Hello World</h2>");
+  res.render("member", { name: "member" });
+});  
+
+
 
 // 測試 query string 參數
 app.get("/try-qs", (req, res) => {
@@ -127,7 +143,9 @@ app.get(/^\/m\/09\d{2}-?\d{3}-?\d{3}$/i, (req, res) => {
 });
 
 app.use("/admins", admin2Router);
+app.use("/ago-index", agoRouter);
 app.use("/member", abRouter);
+app.use("/no-index", noRouter);
 // app.use("/cart2", cart2Router);
 
 app.get("/try-sess", (req, res) => {
@@ -220,7 +238,7 @@ app.post("/login", async (req, res) => {
     req.session.admin = {
       id: row.id,
       email: row.email,
-      nickname: row.member_name,
+      member_name: row.member_name,
       role: row.role,
     };
   } else {
@@ -230,10 +248,44 @@ app.post("/login", async (req, res) => {
   res.json(output);
 });
 
-// 登出处理
-app.get("/logout", async (req, res) => {
-  delete req.session.admin;
-  res.redirect("/");
+
+// router top-level middleware
+
+const ADMIN_ROLE = 'admin';
+
+router.use((req, res, next) => {
+  if (req.session && req.session.admin && req.session.admin.role === ADMIN_ROLE) {
+    // 如果有登入就讓他通過
+    // 條件: 已登入並且為admin
+    return next();
+  }
+  let path = req.url.split("?")[0]; // 只要路徑 (去掉 query string)
+
+  // 可通過的白名單
+  if (["/", "/api"].includes(path)) {
+    return next();
+  } 
+  // res.status(403).send("<h1>無權訪問此頁面</h1>"); // 直接擋掉
+  res.redirect(`/login?u=${req.originalUrl}`); // 導到登入頁
+});
+
+router.get("/", async (req, res) => {
+  // pageName 名稱 = ab-list
+  res.locals.pageName = "ab-list";
+
+  // 調用 getListData 函式
+  const result = await getListData(req);
+
+// getListData 返回中包含 redirect 屬性，則重定向 result.redirect 指定路徑。
+  if (result.redirect) {
+    return res.redirect(result.redirect);
+  }
+  
+  if (req.session && req.session.admin && req.session.admin.role === ADMIN_ROLE) {
+    res.render("member/list", result);
+  } else {
+    res.render("ago-index/ago-home", result);
+  }
 });
 // 登出
 app.get("/logout", async (req, res) => {
