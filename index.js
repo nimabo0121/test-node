@@ -10,7 +10,7 @@ import bcrypt from "bcrypt";
 // const upload = multer({ dest: "tmp_uploads/" });
 import upload from "./utils/upload-imgs.js";
 import admin2Router from "./routes/admin2.js";
-import noRouter from "./routes/no-index.js";
+// import noRouter from "./routes/no-index.js";
 import abRouter from "./routes/member.js";
 import agoRouter from "./routes/ago-index.js";
 // import cart2Router from "./routes/cart2.js";
@@ -35,6 +35,7 @@ const corsOptions = {
   },
 };
 app.use(cors(corsOptions));
+// express 中間件
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(
@@ -70,10 +71,10 @@ app.get("/json-sales", (req, res) => {
 });
 
 
-app.get("/", (req, res) => {
-  // res.send("<h2>Hello World</h2>");
-  res.render("no-home", { name: "noRouter" });
-});
+// app.get("/", (req, res) => {
+//   // res.send("<h2>Hello World</h2>");
+//   res.render("no-home", { name: "noRouter" });
+// });
 
 
 app.get("/", (req, res) => {
@@ -145,7 +146,7 @@ app.get(/^\/m\/09\d{2}-?\d{3}-?\d{3}$/i, (req, res) => {
 app.use("/admins", admin2Router);
 app.use("/ago-index", agoRouter);
 app.use("/member", abRouter);
-app.use("/no-index", noRouter);
+// app.use("/no-index", noRouter);
 // app.use("/cart2", cart2Router);
 
 app.get("/try-sess", (req, res) => {
@@ -230,19 +231,23 @@ app.post("/login", async (req, res) => {
   }
   const row = rows[0];
   const result = await bcrypt.compare(req.body.password, row.password);
+
   if (result) {
+    // 登入成功
     output.success = true;
     output.code = 200;
-
-    // 登入成功, 狀態記錄在 session 裡
+    output.role = row.role; // 設置用戶的角色
+    output.id = row.id;
+    output.email = row.email;
+    output.member_name = row.member_name;
     req.session.admin = {
+      role: row.role,
       id: row.id,
       email: row.email,
       member_name: row.member_name,
-      role: row.role,
     };
   } else {
-    output.code = 430; // 密碼是錯的
+    output.code = 430; // 密碼錯誤
   }
 
   res.json(output);
@@ -251,42 +256,51 @@ app.post("/login", async (req, res) => {
 
 // router top-level middleware
 
-const ADMIN_ROLE = 'admin';
+// 中間件：路由保護
+const ADMIN_ROLE = "admin";
 
-router.use((req, res, next) => {
-  if (req.session && req.session.admin && req.session.admin.role === ADMIN_ROLE) {
-    // 如果有登入就讓他通過
-    // 條件: 已登入並且為admin
+app.use((req, res, next) => {
+  // 檢查是否有會話和是否有 admin 角色
+  if (req.session.admin) {
+    // 如果有登入且角色是 admin，允許進入
     return next();
   }
-  let path = req.url.split("?")[0]; // 只要路徑 (去掉 query string)
 
-  // 可通過的白名單
-  if (["/", "/api"].includes(path)) {
+  // 可以訪問的白名單路徑
+  const whitelist = ["/", "/api"];
+  let path = req.url.split("?")[0]; // 只保留路徑部分，去掉 query string
+
+  if (whitelist.includes(path)) {
     return next();
-  } 
-  // res.status(403).send("<h1>無權訪問此頁面</h1>"); // 直接擋掉
-  res.redirect(`/login?u=${req.originalUrl}`); // 導到登入頁
+  }
+
+  // 其他情況重定向到登入頁面
+  res.redirect(`/login?u=${req.originalUrl}`);
 });
 
-router.get("/", async (req, res) => {
-  // pageName 名稱 = ab-list
-  res.locals.pageName = "ab-list";
+// 首頁路由
+app.get("/", async (req, res) => {
+  res.locals.pageName = "ago-list"; // 設置頁面名稱
 
-  // 調用 getListData 函式
   const result = await getListData(req);
 
-// getListData 返回中包含 redirect 屬性，則重定向 result.redirect 指定路徑。
   if (result.redirect) {
     return res.redirect(result.redirect);
   }
-  
-  if (req.session && req.session.admin && req.session.admin.role === ADMIN_ROLE) {
-    res.render("member/list", result);
+
+  // 根據角色決定渲染的模板
+  if (req.session.admin.role === ADMIN_ROLE) {
+    res.render("member", result); // 管理員的頁面
   } else {
-    res.render("ago-index/ago-home", result);
+    res.render("ago-index", result); // 一般用戶的頁面
   }
 });
+
+// // 載入路由
+// app.use("/member", require("./routes/member"));
+// app.use("/ago-index", require("./routes/ago-index"));
+
+
 // 登出
 app.get("/logout", async (req, res) => {
   delete req.session.admin;

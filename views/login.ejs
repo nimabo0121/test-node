@@ -80,36 +80,43 @@
 
     <%- include("ago-parts/scripts") %>
     <script>
-      const sendData = e => {
-          e.preventDefault();
+    const sendData = e => {
+  e.preventDefault();
 
-          const obj = {
-            email: document.form1.email.value,
-            password: document.form1.password.value,
-          };
+  const obj = {
+    email: document.form1.email.value,
+    password: document.form1.password.value,
+  };
 
-          fetch('', {
-            method: 'POST',
-            body: JSON.stringify(obj),
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          })
-            .then(r => r.json())
-            .then(data => {
-              console.log(data);
-              if (data.success) {
-                // 成功登入後跳到首頁
-                location.href = '/';
-              } else {
-                myModal.show();
-              }
-            }).catch(ex => {
-              console.log(`fetch() 發生錯誤, 回傳的 JSON 格式是錯的`);
-              console.log(ex);
-            })
+  fetch('', {
+    method: 'POST',
+    body: JSON.stringify(obj),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(r => r.json())
+  .then(data => {
+    console.log(data);
+    if (data.success) {
+      // 根據角色跳轉到不同頁面
+      if (data.role === 'admin') {
+        window.location.href = '/member';
+      } else if (data.role === 'user') {
+        window.location.href = '/ago-index';
+      } else {
+        // 預設跳轉到首頁
+        window.location.href = '/';
+      }
+    } else {
+      myModal.show();
+    }
+  }).catch(ex => {
+    console.log(`fetch() 發生錯誤, 回傳的 JSON 格式是錯的`);
+    console.log(ex);
+  });
+}
 
-        }
 
   const myModal = new bootstrap.Modal('#myModal');
   </script>
