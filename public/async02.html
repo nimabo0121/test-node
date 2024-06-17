@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-hant-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script>
+    const myPromise = async (s) => {
+      return new Promise((resolve, reject) => {
+        const ms = 200 + Math.floor(Math.random() * 1000);
+        setTimeout(() => {
+          resolve({ s, ms });
+        }, ms)
+      });
+    }
+
+    // 兩個 async 函式是各自跑各自的
+    (async () => {
+      for (let i = 0; i < 10; i++) {
+        const r = await myPromise('a' + i);
+        console.log(r);
+      }
+    })();
+
+    (async () => {
+      for (let i = 0; i < 10; i++) {
+        const r = await myPromise('b' + i);
+        console.log(r);
+      }
+    })();
+
+
+  </script>
+</body>
+
+</html>

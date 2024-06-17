@@ -1,0 +1,73 @@
+ <!-- 側欄 -->
+ <div class="sidebar py-2">
+  <h1><a href="/">牡丹樓管理系統</h1>
+  <ul>
+
+      <li>
+        <a class="nav-link <%= pageName==='ab-list' ? 'active' : '' %>" href="/member">
+        <i class="bi bi-people-fill"></i>
+        會員管理
+      </a>
+      </li>
+
+      <li>
+        <a class="nav-link <%= pageName==='json-sales' ? 'active' : '' %>" href="/member/add">
+          <i class="bi bi-calendar-check"></i>
+          會員新增
+        </a>
+      </li>
+
+      <li>
+        <a class="nav-link <%= pageName==='json-sales' ? 'active' : '' %>" href="#">
+          <i class="bi bi-file-earmark"></i>
+          文章管理
+        </a>
+      </li>
+
+      <li>
+        <a class="nav-link <%= pageName==='json-sales' ? 'active' : '' %>" href="#">
+          <i class="bi bi-egg-fried"></i>
+          菜單管理
+        </a>
+      </li>
+
+      <li>
+        <a class="nav-link <%= pageName==='json-sales' ? 'active' : '' %>" href="/manage-list">
+          <i class="bi bi-cart4"></i>
+          訂單管理
+        </a>
+      </li>
+      
+  </ul>
+  <ul class="navbar-nav mb-2 mx-2 mb-lg-0">
+    <% if(session.admin) { %>
+      <li class="nav-item">
+        <a class="nav-link"><%= session.admin.member_name %></a>
+      </li>
+    <% } else { %>
+      <li class="nav-item ">
+        <a class="nav-link" href="/add">註冊</a>
+      </li>
+    <% } %>
+  
+  
+    <% if(session.admin) { %>
+      <li class="nav-item">
+        <a class="nav-link"><%= session.admin.member_name %></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/logout">登出</a>
+      </li>
+    <% } else { %>
+      <li class="nav-item ">
+        <a class="nav-link" href="/login">登入</a>
+      </li>
+    <% } %>
+  
+  
+            
+    </ul>
+</div>
+
+
+ 
