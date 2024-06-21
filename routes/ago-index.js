@@ -109,8 +109,8 @@ router.use((req, res, next) => {
 });
 
 router.get("/", async (req, res) => {
-  // pageName 名稱 = ab-list
-  res.locals.pageName = "ago-list";
+  // pageName 名稱 = ab-home
+  res.locals.pageName = "ago-home";
 
   // 調用 getListData 函式
   const result = await getListData(req);
@@ -121,7 +121,7 @@ router.get("/", async (req, res) => {
   }
   
   if (req.session && req.session.admin && req.session.admin.role === USER_ROLE) {
-    res.render("ago-index/list", result);
+    res.render("ago-index/ago-home", result);
   } else {
     res.render("login", result);
   }

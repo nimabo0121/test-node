@@ -1,6 +1,5 @@
 create database test;
 use test;
-#drop database mudanlow;
 #drop database test;
 create table member_profile( #主表, 會員基本資料/註冊, 欄位皆不可為空
 id int auto_increment primary key, #會員id
@@ -17,9 +16,15 @@ status enum('active', 'blacklist')not null default 'active', # 黑名單用
 reason varchar(255), # 黑名單原因
 blacklist_date datetime comment '黑名單日期'
 );
-show warnings;
+
+# show warnings;
+
 INSERT INTO member_profile (member_name, gender, email, mobile, birthday, create_date, password, hash, role, status, reason, blacklist_date)
-VALUES ('张三', '男', 'zhangsan@example.com', '13812345678', '1990-01-01', '2023-06-16 14:30:00', 'hashed_password', 'hashed_hash', 'user', 'active', NULL, NULL);
+VALUES 
+('张三', '男', 'zxc123456@gmail.com', '13812345678', '1990-01-01', '2023-06-16 14:30:00', 'hashed_password', 'hashed_hash', 'user', 'active', NULL, NULL),
+('张三', '男', 'asd123456@gmail.com', '09123456789', '1990-01-01', '2023-06-16 14:30:00', 'hashed_password', 'hashed_hash', 'admin', 'active', NULL, NULL);
+#密碼 asd123456
+#哈希值密碼 $2b$10$nbhiEh2Z2PJZSyf/cNiWaObgSzujwx34rASKOcgCYkL2.LllIeEoC
 
 CREATE TABLE cart_status (
     sid int auto_increment primary key, # 狀態ID
@@ -32,7 +37,7 @@ INSERT INTO cart_status (status_name, status_remark) VALUES
 ('店家以確認', '訂單處於待處理狀態'),
 ('商品已送達', '待買家取貨'),
 ('取消訂單', '已取消'),
-('完成訂單,買家以確認完成');
+('完成訂單','買家以確認完成');
 
 create table contact_book(	# 聯絡資料
 member_profile_id int ,
